@@ -13,50 +13,51 @@ public class CuratorAgent extends Agent {
         register();
 
         // create art collection - oneshot
-        addBehaviour(new OneShotBehaviour() {           
+        addBehaviour(new OneShotBehaviour() {
             @Override
-			public void action() {
-				// TODO
-			}
+            public void action() {
+                // TODO
+            }
         });
 
         // respond to tour guide - simpleachieveresponder
         addBehaviour(new SimpleAchieveREResponder(this) {
             @Override
-			public void action() {
-				// TODO
-			}
+            public void action() {
+                // TODO
+            }
         });
 
         // respond to profileragent - cyclicbehaviour
         addBehaviour(new CyclicBehaviour(this) {
             @Override
-			public void action() {
+            public void action() {
                 ACLMessage msg = receive();
                 if (msg != null)
                     System.out.println(" - " + myAgent.getLocalName() + " <- " + msg.getContent());
-                    ACLMessage reply = msg.createReply();
-                    reply.setPerformative( ACLMessage.INFORM );
-                    reply.setContent("Pong");
-                    reply.send();
+                ACLMessage reply = msg.createReply();
+                reply.setPerformative(ACLMessage.INFORM);
+                reply.setContent("Pong");
+                reply.send();
                 block(); // <- schedule execution until next message received
-			}
+            }
         });
     }
 
     // code for registering to DF
     void register() {
-        ServiceDescription sd  = new ServiceDescription();
-        sd.setType( "curator" );
-        sd.setName( getLocalName() );
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("curator");
+        sd.setName(getLocalName());
 
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         dfd.addServices(sd);
 
-        try {  
-            DFService.register(this, dfd );  
+        try {
+            DFService.register(this, dfd);
+        } catch (FIPAException fe) {
+            fe.printStackTrace();
         }
-        catch (FIPAException fe) { fe.printStackTrace(); }
     }
 }

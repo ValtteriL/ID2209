@@ -13,44 +13,45 @@ public class GuideAgent extends Agent {
         // create art tour - simpleachievereinitiator
         addBehaviour(new SimpleAchieveREInitiator(this) {
             @Override
-			public void action() {
-				// TODO
-			}
+            public void action() {
+                // TODO
+            }
         });
 
         // the following tasks are executed in parallel
         ParallelBehaviour parallelBehaviour = new ParallelBehaviour();
-        
+
         // add closing time clock
         parallelBehaviour.addSubBehaviour(new WakerBehaviour(this, 60000) {
             @Override
-			public void action() {
-				// TODO
-			}
+            public void action() {
+                // TODO
+            }
         });
 
         // add message receiver - msgreceiver that calls simpleachievereinitiator when msg received
         parallelBehaviour.addSubBehaviour(new MsgReceiver(this) {
             @Override
-			public void action() {
-				// TODO
-			}
+            public void action() {
+                // TODO
+            }
         });
     }
 
     // code for registering to DF
     void register() {
-        ServiceDescription sd  = new ServiceDescription();
-        sd.setType( "guide" );
-        sd.setName( getLocalName() );
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("guide");
+        sd.setName(getLocalName());
 
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         dfd.addServices(sd);
 
-        try {  
-            DFService.register(this, dfd );  
+        try {
+            DFService.register(this, dfd);
+        } catch (FIPAException fe) {
+            fe.printStackTrace();
         }
-        catch (FIPAException fe) { fe.printStackTrace(); }
     }
 }
