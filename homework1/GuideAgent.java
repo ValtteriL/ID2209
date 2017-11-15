@@ -3,17 +3,22 @@ import jade.core.AID;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPAException;
+import jade.core.behaviours.*;
+import jade.proto.SimpleAchieveREInitiator;
+import jade.lang.acl.ACLMessage;
+import jade.proto.states.MsgReceiver;
 
 public class GuideAgent extends Agent {
 
     protected void setup() {
+
         // register to DF
         register();
 
         // create art tour - simpleachievereinitiator
-        addBehaviour(new SimpleAchieveREInitiator(this) {
+        addBehaviour(new SimpleAchieveREInitiator(this, null) {
             @Override
-            public void action() {
+            protected void handleInform(ACLMessage msg) {
                 // TODO
             }
         });
@@ -24,15 +29,15 @@ public class GuideAgent extends Agent {
         // add closing time clock
         parallelBehaviour.addSubBehaviour(new WakerBehaviour(this, 60000) {
             @Override
-            public void action() {
+            protected void handleElapsedTimeout() {
                 // TODO
             }
         });
 
         // add message receiver - msgreceiver that calls simpleachievereinitiator when msg received
-        parallelBehaviour.addSubBehaviour(new MsgReceiver(this) {
+        parallelBehaviour.addSubBehaviour(new MsgReceiver(this, null, 0, null, null) {
             @Override
-            public void action() {
+            protected void handleMessage(ACLMessage msg) {
                 // TODO
             }
         });

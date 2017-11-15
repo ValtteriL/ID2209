@@ -3,29 +3,32 @@ import jade.core.AID;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPAException;
+import jade.core.behaviours.*;
+import jade.proto.SimpleAchieveREInitiator;
+import jade.lang.acl.ACLMessage;
 
 public class ProfilerAgent extends Agent {
 
     protected void setup() {
 
         // create user profile
-        profile = new Profile();
+        String profile = "";
 
         // following behaviours are executed sequentially
         SequentialBehaviour sequentialBehaviour = new SequentialBehaviour();
 
         // request tour - simpleachievereinitiator
-        sequentialBehaviour.addSubBehaviour(new SimpleAchieveREInitiator(this) {
+        sequentialBehaviour.addSubBehaviour(new SimpleAchieveREInitiator(this, null) {
             @Override
-            public void action() {
+            protected void handleInform(ACLMessage msg) {
                 // TODO
             }
         });
 
         // ask tour details - simpleachievereinitiator
-        sequentialBehaviour.addSubBehaviour(new SimpleAchieveREInitiator(this) {
+        sequentialBehaviour.addSubBehaviour(new SimpleAchieveREInitiator(this, null) {
             @Override
-            public void action() {
+            protected void handleInform(ACLMessage msg) {
                 // TODO
             }
         });

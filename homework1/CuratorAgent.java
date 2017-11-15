@@ -3,12 +3,16 @@ import jade.core.AID;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPAException;
+import jade.core.behaviours.*;
+import jade.proto.SimpleAchieveREResponder;
+import jade.lang.acl.ACLMessage;
 
 public class CuratorAgent extends Agent {
 
     String[] collection;
 
     protected void setup() {
+
         // register to DF
         register();
 
@@ -21,10 +25,11 @@ public class CuratorAgent extends Agent {
         });
 
         // respond to tour guide - simpleachieveresponder
-        addBehaviour(new SimpleAchieveREResponder(this) {
+        addBehaviour(new SimpleAchieveREResponder(this, null) {
             @Override
-            public void action() {
+            protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
                 // TODO
+                return null;
             }
         });
 
@@ -38,7 +43,7 @@ public class CuratorAgent extends Agent {
                 ACLMessage reply = msg.createReply();
                 reply.setPerformative(ACLMessage.INFORM);
                 reply.setContent("Pong");
-                reply.send();
+                send(reply);
                 block(); // <- schedule execution until next message received
             }
         });
