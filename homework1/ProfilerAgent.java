@@ -6,7 +6,6 @@ import jade.domain.FIPAException;
 import jade.core.behaviours.*;
 import jade.proto.SimpleAchieveREInitiator;
 import jade.lang.acl.ACLMessage;
-import java.io.Serializable;
 import jade.lang.acl.UnreadableException;
 import jade.domain.FIPANames;
 import java.io.IOException;
@@ -26,6 +25,9 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import java.io.Serializable;
+
+
 public class ProfilerAgent extends Agent {
 
     UserProfile profile;
@@ -33,11 +35,12 @@ public class ProfilerAgent extends Agent {
     String artdata;
     List list;
     ArrayList<AID> guides;
+    ArrayList<Artifact> profilescollection;
 
     protected void setup() {
 
         // create user profile
-        profile = new UserProfile();
+        profile = new UserProfile(1300, 1500);
 
         createGuideSelectionGUI();
 
@@ -71,15 +74,24 @@ public class ProfilerAgent extends Agent {
             public void onWake() {
                 ACLMessage msg = new ACLMessage(ACLMessage.CFP);
                 msg.addReceiver(guides.get(0));
-                msg.setContent("profile"); // TODO send guide our profile
+                try {
+                    msg.setContentObject(profile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 send(msg);
 
                 // Receive message with the tour
                 MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
                 ACLMessage reply = blockingReceive(mt);
                 if (reply != null) {
-                    System.out.println("Profiler got tour! - " + reply.getContent());
-                    tour = reply.getContent();
+                    try {
+                        profilescollection = (ArrayList) reply.getContentObject();
+                        System.out.println("Profiler: got custom collection! (" + profilescollection.size() + ") items");
+                    } 
+                    catch (UnreadableException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 // start asking curator - every second
@@ -122,9 +134,6 @@ public class ProfilerAgent extends Agent {
         }
         return null;
     }
-
-
-
 
     /**
     * Creates a simple GUI to select a guide for a tour.
@@ -204,12 +213,12 @@ public class ProfilerAgent extends Agent {
     }
 
 }
-
 class UserProfile implements Serializable {
+    public int minAge;
+    public int maxAge;
 
-    private int interestCentury;
-
-    public UserProfile() {
-        interestCentury = (int) (Math.random() * 500 + 1500);
+    public UserProfile(int min, int max) {
+        this.minAge = min;
+        this.maxAge = max;
     }
 }

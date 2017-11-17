@@ -8,10 +8,17 @@ import jade.proto.SimpleAchieveREInitiator;
 import jade.lang.acl.ACLMessage;
 import jade.proto.states.MsgReceiver;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.io.IOException;
+
 
 public class GuideAgent extends Agent {
 
-    String tour;
+    ArrayList<Artifact> collection;
+    UserProfile user;
+    ArrayList guidescollection;
 
     protected void setup() {
 
@@ -25,7 +32,13 @@ public class GuideAgent extends Agent {
             protected void handleMessage(ACLMessage tourRequest) {
                 super.handleMessage(tourRequest);
                 System.out.println("Guide: Someone is asking for tour...");
-                // int age = (int) tourRequest.getContent(); // TODO: should we use the age somehow?
+                try {
+                    user = (UserProfile) tourRequest.getContentObject();
+                    System.out.println("Guide: the user has minage = " + user.minAge + " and maxage " + user.maxAge);
+                } 
+                catch (UnreadableException e) {
+                    e.printStackTrace();
+                }
 
                 // ask curator for art
                 System.out.println("Guide: Creating art tour...");
@@ -33,20 +46,30 @@ public class GuideAgent extends Agent {
                 msg.addReceiver(findService("curator"));
                 send(msg);
 
-                // receive message with art
+                // receive message from curator with collection
                 MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
                 ACLMessage reply = blockingReceive(mt);
                 if (reply != null) {
-                    System.out.println("Guide got reply! - " + reply.getContent());
-                    tour = reply.getContent();
+                    try {
+                        guidescollection = (ArrayList) reply.getContentObject();
+                        System.out.println("Guide: got art collection from curator! (" + guidescollection.size() + ") items");
+                    } 
+                    catch (UnreadableException e) {
+                        e.printStackTrace();
+                    }
                 }
 
-                // TODO HERE: modify received art to correspond to profilers interests
+                // create custom collection for the user
+                ArrayList<Artifact> customized = customizeCollection(user, guidescollection);
 
                 // reply for profiler
                 ACLMessage tourReply = tourRequest.createReply();
                 tourReply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-                tourReply.setContent(tour);
+                try {
+                    msg.setContentObject(customized);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 send(tourReply);
             }
         });
@@ -85,5 +108,17 @@ public class GuideAgent extends Agent {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private ArrayList<Artifact> customizeCollection(UserProfile profile, ArrayList<Artifact> fullList) {
+        ArrayList<Artifact> customizedlist = new ArrayList<Artifact>();
+        for (int i=0; i<fullList.size(); i++) {
+            Artifact temp = fullList.get(i);
+            if (temp.age <= profile.maxAge && temp.age >= profile.minAge) {
+                // suitable piece of art!
+                customizedlist.add(temp);
+            }      
+        }
+        return customizedlist;
     }
 }

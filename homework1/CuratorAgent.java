@@ -1,4 +1,7 @@
 import jade.core.Agent;
+
+import java.util.List;
+
 import jade.core.AID;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.*;
@@ -7,12 +10,20 @@ import jade.core.behaviours.*;
 import jade.proto.SimpleAchieveREResponder;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.util.leap.Serializable;
+import java.util.ArrayList;
+import java.io.IOException;
+
 
 public class CuratorAgent extends Agent {
 
-    String[] collection;
+    ArrayList<Artifact> collection;
 
     protected void setup() {
+
+        // create art collection
+        collection = new ArrayList<Artifact>();
+        generateCollection();
 
         // register to DF
         register();
@@ -29,7 +40,11 @@ public class CuratorAgent extends Agent {
                     System.out.println("Curator: got msg from Guide!");
                     ACLMessage reply = msg.createReply();
                     reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-                    reply.setContent("Pong");
+                    try {
+                        reply.setContentObject(collection);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     send(reply);
                 }
                 block(); // <- schedule execution until next message received
@@ -71,5 +86,33 @@ public class CuratorAgent extends Agent {
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
+    }
+
+    void generateCollection() {
+        collection.add(new Artifact(1, 1000, "a", "A"));
+        collection.add(new Artifact(2, 1100, "b", "B"));
+        collection.add(new Artifact(3, 1200, "c", "C"));
+        collection.add(new Artifact(4, 1300, "d", "D"));
+        collection.add(new Artifact(5, 1400, "e", "E"));
+        collection.add(new Artifact(6, 1500, "f", "F"));
+        collection.add(new Artifact(7, 1600, "g", "G"));
+        collection.add(new Artifact(8, 1700, "j", "J"));
+        collection.add(new Artifact(9, 1800, "i", "I"));
+        collection.add(new Artifact(10, 1900, "l", "L"));
+    }
+}
+
+class Artifact implements Serializable {
+
+    public int age;
+    public int id;
+    public String name;
+    public String author;
+
+    public Artifact(int artifactid, int artifactage, String artifactname, String artifactauthor) {
+        this.id = artifactid;
+        this.age = artifactage;
+        this.name = artifactname;
+        this.author = artifactauthor;
     }
 }
