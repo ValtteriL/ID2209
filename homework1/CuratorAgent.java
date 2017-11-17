@@ -6,6 +6,7 @@ import jade.domain.FIPAException;
 import jade.core.behaviours.*;
 import jade.proto.SimpleAchieveREResponder;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 public class CuratorAgent extends Agent {
 
@@ -16,37 +17,43 @@ public class CuratorAgent extends Agent {
         // register to DF
         register();
 
-        // create art collection - oneshot
-        addBehaviour(new OneShotBehaviour() {
+        ParallelBehaviour parallelBehaviour = new ParallelBehaviour();
+
+        // respond to Guideagent
+        parallelBehaviour.addSubBehaviour(new OneShotBehaviour(this) {
             @Override
             public void action() {
-                // TODO
-            }
-        });
-
-        // respond to tour guide - simpleachieveresponder
-        addBehaviour(new SimpleAchieveREResponder(this, null) {
-            @Override
-            protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
-                // TODO
-                return null;
-            }
-        });
-
-        // respond to profileragent - cyclicbehaviour
-        addBehaviour(new CyclicBehaviour(this) {
-            @Override
-            public void action() {
-                ACLMessage msg = receive();
-                if (msg != null)
-                    System.out.println(" - " + myAgent.getLocalName() + " <- " + msg.getContent());
-                ACLMessage reply = msg.createReply();
-                reply.setPerformative(ACLMessage.INFORM);
-                reply.setContent("Pong");
-                send(reply);
+                MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+                ACLMessage msg = blockingReceive(mt);
+                if (msg != null) {
+                    System.out.println("Curator: got msg from Guide!");
+                    ACLMessage reply = msg.createReply();
+                    reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                    reply.setContent("Pong");
+                    send(reply);
+                }
                 block(); // <- schedule execution until next message received
             }
         });
+
+        // respond to profileagent
+        parallelBehaviour.addSubBehaviour(new CyclicBehaviour(this) {
+            @Override
+            public void action() {
+                MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+                ACLMessage msg = receive(mt);
+                if (msg != null) {
+                    System.out.println("Curator: Got msg from Profiler");
+                    ACLMessage reply = msg.createReply();
+                    reply.setPerformative(ACLMessage.INFORM);
+                    reply.setContent("Pong");
+                    send(reply);
+                }
+                block(); // <- schedule execution until next message received
+            }
+        });
+
+        addBehaviour(parallelBehaviour);
     }
 
     // code for registering to DF
