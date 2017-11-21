@@ -66,7 +66,7 @@ public class GuideAgent extends Agent {
                 ACLMessage tourReply = tourRequest.createReply();
                 tourReply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
                 try {
-                    msg.setContentObject(customized);
+                    tourReply.setContentObject(customized);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -93,7 +93,7 @@ public class GuideAgent extends Agent {
         }
     }
 
-    // Find service by service type
+    // Code for finding service by service type
     private AID findService(String servicetype) {
         DFAgentDescription description = new DFAgentDescription();
         ServiceDescription serviceDescription = new ServiceDescription();
@@ -110,6 +110,7 @@ public class GuideAgent extends Agent {
         return null;
     }
 
+    // Code for choosing right pieces of art for user
     private ArrayList<Artifact> customizeCollection(UserProfile profile, ArrayList<Artifact> fullList) {
         ArrayList<Artifact> customizedlist = new ArrayList<Artifact>();
         for (int i=0; i<fullList.size(); i++) {

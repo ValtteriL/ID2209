@@ -28,6 +28,7 @@ public class CuratorAgent extends Agent {
         // register to DF
         register();
 
+        SequentialBehaviour SequentialBehaviour = new SequentialBehaviour();
         ParallelBehaviour parallelBehaviour = new ParallelBehaviour();
 
         // respond to Guideagent
@@ -61,17 +62,18 @@ public class CuratorAgent extends Agent {
                     System.out.println("Curator: Got msg from Profiler");
                     ACLMessage reply = msg.createReply();
                     reply.setPerformative(ACLMessage.INFORM);
-                    reply.setContent("Pong");
+                    reply.setContent("SUM INFORMATION");
                     send(reply);
                 }
                 block(); // <- schedule execution until next message received
             }
         });
 
-        addBehaviour(parallelBehaviour);
+        SequentialBehaviour.addSubBehaviour(parallelBehaviour);
+        addBehaviour(SequentialBehaviour);
     }
 
-    // code for registering to DF
+    // code for registering to DF as curator
     void register() {
         ServiceDescription sd = new ServiceDescription();
         sd.setType("curator");
@@ -88,6 +90,7 @@ public class CuratorAgent extends Agent {
         }
     }
 
+    // code for generating collection of art!
     void generateCollection() {
         collection.add(new Artifact(1, 1000, "a", "A"));
         collection.add(new Artifact(2, 1100, "b", "B"));
@@ -102,6 +105,7 @@ public class CuratorAgent extends Agent {
     }
 }
 
+// model for piece of art
 class Artifact implements Serializable {
 
     public int age;

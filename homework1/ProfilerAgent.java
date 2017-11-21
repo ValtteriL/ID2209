@@ -14,35 +14,23 @@ import jade.proto.SubscriptionInitiator;
 import jade.lang.acl.MessageTemplate;
 import jade.core.behaviours.TickerBehaviour;
 
-import javax.swing.BoxLayout;
-
-import java.awt.Frame;
-import java.awt.Label;
 import java.awt.List;
-import java.awt.Panel;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-
 import java.io.Serializable;
-
 
 public class ProfilerAgent extends Agent {
 
     UserProfile profile;
-    String tour;
-    String artdata;
     List list;
     ArrayList<AID> guides;
     ArrayList<Artifact> profilescollection;
+    int currentArt;
 
     protected void setup() {
+        currentArt = 0;
+        list = new List();
 
         // create user profile
-        profile = new UserProfile(1300, 1500);
-
-        createGuideSelectionGUI();
+        profile = new UserProfile(1500, 1800);
 
         // subscribe to new guides on DF
         DFAgentDescription template = new DFAgentDescription();
@@ -59,6 +47,8 @@ public class ProfilerAgent extends Agent {
                         //Refresh the guides and update the list
                         guides = findGuides();
                         updateList();
+                        for (int i=0; i<list.countItems(); i++)
+                            System.out.println(list.getItem(0)); // print out the available guides
                     }
                 } catch (FIPAException fe) {
                     fe.printStackTrace();
@@ -67,8 +57,8 @@ public class ProfilerAgent extends Agent {
         };
         addBehaviour(b);
 
-        // after 5 seconds, get tour from first guide
-        addBehaviour(new WakerBehaviour(this, 5000) {
+        // after 2 seconds, get tour from first guide
+        addBehaviour(new WakerBehaviour(this, 2000) {
 
             @Override
             public void onWake() {
@@ -87,9 +77,9 @@ public class ProfilerAgent extends Agent {
                 if (reply != null) {
                     try {
                         profilescollection = (ArrayList) reply.getContentObject();
-                        System.out.println("Profiler: got custom collection! (" + profilescollection.size() + ") items");
-                    } 
-                    catch (UnreadableException e) {
+                        System.out
+                                .println("Profiler: got custom collection! (" + profilescollection.size() + ") items");
+                    } catch (UnreadableException e) {
                         e.printStackTrace();
                     }
                 }
@@ -98,19 +88,26 @@ public class ProfilerAgent extends Agent {
                 addBehaviour(new TickerBehaviour(myAgent, 1000) {
                     @Override
                     public void onTick() {
-                        // ask
-                        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                        msg.addReceiver(findService("curator"));
-                        send(msg);
+                        if (currentArt < profilescollection.size()) {
+                            // if we havent asked about every art yet
 
-                        // receive reply
-                        MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-                        ACLMessage reply = blockingReceive(mt);
-                        if (reply != null) {
-                            System.out.println("Profiler got information from curator! - " + reply.getContent());
+                            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                            msg.addReceiver(findService("curator"));
+                            send(msg);
+
+                            // receive reply
+                            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+                            ACLMessage reply = blockingReceive(mt);
+                            if (reply != null) {
+                                System.out.println("Profiler got information from curator about "
+                                        + profilescollection.get(currentArt).name + "! - " + reply.getContent());
+                            }
+
+                            currentArt++; // increment the counter
+
+                        } else {
+                            this.stop(); // stop asking!
                         }
-
-                        //this.stop(); // stop asking!
                     }
                 });
             }
@@ -135,46 +132,6 @@ public class ProfilerAgent extends Agent {
         return null;
     }
 
-    /**
-    * Creates a simple GUI to select a guide for a tour.
-    * */
-    private void createGuideSelectionGUI() {
-        final Frame frame = new Frame();
-        Panel panel = new Panel();
-
-        BoxLayout boxLayout = new BoxLayout(panel, BoxLayout.PAGE_AXIS);
-        panel.setLayout(boxLayout);
-
-        Label label = new Label("Guides available");
-
-        list = new List();
-        list.addItemListener(new ItemListener() {
-
-            @Override
-            public void itemStateChanged(ItemEvent event) {
-                // getTour(list.getSelectedIndex()); 
-            }
-        });
-
-        if (guides != null) {
-            for (AID guide : guides) {
-                list.add(guide.getLocalName());
-            }
-        }
-
-        panel.add(label);
-        panel.add(list);
-
-        frame.add(panel);
-        frame.pack();
-        frame.setVisible(true);
-        frame.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent we) {
-                doDelete();
-                frame.dispose();
-            }
-        });
-    }
 
     /**
      * Updates the list of guides in the GUI.
@@ -213,6 +170,7 @@ public class ProfilerAgent extends Agent {
     }
 
 }
+
 class UserProfile implements Serializable {
     public int minAge;
     public int maxAge;
