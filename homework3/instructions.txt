@@ -1,0 +1,9 @@
+Compilation and execution:
+
+javac <java-files>
+java -cp "$CLASSPATH:$PWD" <class files without ending>
+
+
+Example:
+javac Controller.java CuratorAgent.java ProfilerAgent.java
+java -cp "$CLASSPATH:$PWD" Controller CuratorAgent ProfilerAgent
