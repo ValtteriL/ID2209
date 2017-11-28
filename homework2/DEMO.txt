@@ -1,0 +1,2 @@
+javac ProfilerAgent.java CuratorAgent.java
+java -cp $CLASSPATH:$PWD jade.Boot -gui -agents 'profiler1:ProfilerAgent(50);profiler2:ProfilerAgent(60);profiler3:ProfilerAgent(70);curator:CuratorAgent(100, 10, 80)'
